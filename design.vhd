@@ -1,6 +1,7 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
 
+
 entity receptor_control_remoto is 
     port (
         rst         :       in std_logic;
@@ -18,6 +19,8 @@ end receptor_control_remoto;
 architecture solucion of receptor_control_remoto is 
 
 begin
+  
+
     
 
 end solucion;
