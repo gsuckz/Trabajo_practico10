@@ -3,7 +3,7 @@ use IEEE.std_logic_1164.all;
 use work.det_tiempo_pkg.all;
 use work.ffd_pkg.all;
 
---En tiempo se entrega la cantidad de ciclos desde el ultimo flanco, tipo='1' si fue descendente, '0' sino.
+--En tiempo se entrega la cantidad de ciclos desde el ultimo flanco, tipo='1' si fue ascendente, '0' sino.
 
 entity tiempo_med is
     generic (constant N : natural := 1);
@@ -28,21 +28,29 @@ begin
         begin 
             if rst = '1'  then 
                 tiempo  <= (others => '0'); 
+                tiempo_t <= (others => '0'); 
                 tipo    <= '0'';           
-            elsif clk'event then
-                tiempo <= std_logic_vector(unsigned(tiempo_1) + 1);
-                if flanco then  
-                    tiempo  <= (others => '0');
-                    tipo    <= pulso;
+            elsif rising_edge(clk)   then
+                tiempo_t <= std_logic_vector(unsigned(tiempo_t) + 1);  --es valido?
+                 if flanco  then  
+                    tiempo_t  <= std_logic_vector(1);
+                    tipo      <= pulso;
+                    tiempo    <= tiempo_t;
                 end if;
             end if ;   
-    
+           
         end process;
+                
+    
+                    
+    
+
+               
 
     flanco : process(rst,pulso,clk)
         begin   
             flanco <= '0';    
-            if pulso'event then
+            if clk =0 or pulso'event and not(rst = '1') then
                 flanco <= '1';
                 end if;
         end process;
@@ -51,7 +59,7 @@ begin
     med : process(tipo_1,clk)
         begin
             med<='0';
-            if tipo_1'event then
+            if tipo_1'event or clk = '0' then
                 med<='1';
             end if;
         end process;
