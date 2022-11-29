@@ -55,7 +55,7 @@ begin
                 end if;
         end process;
             
-
+--cambio
     med : process(tipo_1,clk)
         begin
             med<='0';
