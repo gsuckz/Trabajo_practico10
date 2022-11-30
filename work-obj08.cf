@@ -1,0 +1,4 @@
+v 4
+file . "testbench.vhd" "7e3133a42ffa2287abb3ef78f19f33a50aa3ac3b" "20221130155224.587":
+  entity receptor_control_remoto_tb at 1( 0) + 0 on 11;
+  architecture tb of receptor_control_remoto_tb at 10( 126) + 0 on 12;
