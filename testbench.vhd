@@ -44,6 +44,7 @@ begin
     wait for clk_L;
     clk_in <= '1';
     wait for clk_H;
+    wait;
 end process;
 
 

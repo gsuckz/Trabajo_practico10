@@ -17,12 +17,7 @@ end receptor_control_remoto;
 
 
 architecture solucion of receptor_control_remoto is 
-
-begin
-  
-
-    
-
+begin    
 end solucion;
 
 
