@@ -1,6 +1,6 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
-use work.testbench_pkg.all;
+
 
 package testbench_pkg is
     function gen_msg(texto: string; e : std_logic_vector; o :std_logic_vector) return string;

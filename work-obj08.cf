@@ -1,28 +1,28 @@
 v 4
-file . "sipo.vhd" "8e912841927057f8f45f79d8faee7e59f16e5161" "20221201132840.620":
-  entity sipo at 1( 0) + 0 on 4;
-  architecture solucion of sipo at 16( 341) + 0 on 4;
-file . "johnson.vhd" "e55bb7d4a6d33686f6dafd6658708144bc71b4c6" "20221201132840.619":
-  entity johnson at 1( 0) + 0 on 4;
-  architecture solucion of johnson at 16( 343) + 0 on 4;
+file . "testbench.vhd" "abe924010f21ea707bd66d8c024a2deee584e56a" "20221205075149.979":
+  package testbench_pkg at 1( 0) + 0 on 4;
+  package body testbench_pkg at 10( 252) + 0 on 4;
+  entity receptor_control_remoto_tb at 25( 726) + 0 on 4;
+  architecture tb of receptor_control_remoto_tb at 30( 803) + 0 on 4;
+file . "contador.vhd" "b06f4a68f52d7c7f1831d5042e69c7256f1cc43c" "20221201132840.618":
+  entity contador at 1( 0) + 0 on 4;
+  architecture solucion of contador at 19( 456) + 0 on 4;
+file . "design.vhd" "872f52e3cbcb79acc3d4e641fd9d3aa683ab72d3" "20221205075149.979":
+  entity receptor_control_remoto at 1( 0) + 0 on 4;
+  architecture solucion of receptor_control_remoto at 18( 478) + 0 on 4;
+file . "det_flanco.vhd" "8b10541d188219b68ed40170425ee787d8cb8b1e" "20221201132840.618":
+  entity det_flanco at 1( 0) + 0 on 4;
+  architecture solucion of det_flanco at 15( 354) + 0 on 4;
+file . "det_tiempo.vhd" "30270ebfb19bb92885f5ba470d64e2a56c8c5ef0" "20221201132840.619":
+  entity det_tiempo at 1( 0) + 0 on 4;
+  architecture solucion of det_tiempo at 18( 405) + 0 on 4;
 file . "ffd.vhd" "82d496bf7e28d8b6c1a99f7b879d3c833031be5a" "20221201132840.619":
   package ffd_pkg at 1( 0) + 0 on 4;
   entity ffd at 17( 410) + 0 on 4;
   architecture solucion of ffd at 32( 739) + 0 on 4;
-file . "det_tiempo.vhd" "30270ebfb19bb92885f5ba470d64e2a56c8c5ef0" "20221201132840.619":
-  entity det_tiempo at 1( 0) + 0 on 4;
-  architecture solucion of det_tiempo at 18( 405) + 0 on 4;
-file . "det_flanco.vhd" "8b10541d188219b68ed40170425ee787d8cb8b1e" "20221201132840.618":
-  entity det_flanco at 1( 0) + 0 on 4;
-  architecture solucion of det_flanco at 15( 354) + 0 on 4;
-file . "design.vhd" "8ea27051e4041ccfee1483db3bda210b4c413cb1" "20221205064700.251":
-  entity receptor_control_remoto at 1( 0) + 0 on 4;
-  architecture solucion of receptor_control_remoto at 19( 480) + 0 on 4;
-file . "contador.vhd" "b06f4a68f52d7c7f1831d5042e69c7256f1cc43c" "20221201132840.618":
-  entity contador at 1( 0) + 0 on 4;
-  architecture solucion of contador at 19( 456) + 0 on 4;
-file . "testbench.vhd" "c39f1c35ababcdf82bb3535413629a87c360e816" "20221205064700.252":
-  package testbench_pkg at 1( 0) + 0 on 4;
-  package body testbench_pkg at 10( 279) + 0 on 4;
-  entity receptor_control_remoto_tb at 25( 753) + 0 on 4;
-  architecture tb of receptor_control_remoto_tb at 30( 830) + 0 on 4;
+file . "johnson.vhd" "e55bb7d4a6d33686f6dafd6658708144bc71b4c6" "20221201132840.619":
+  entity johnson at 1( 0) + 0 on 4;
+  architecture solucion of johnson at 16( 343) + 0 on 4;
+file . "sipo.vhd" "8e912841927057f8f45f79d8faee7e59f16e5161" "20221201132840.620":
+  entity sipo at 1( 0) + 0 on 4;
+  architecture solucion of sipo at 16( 341) + 0 on 4;
