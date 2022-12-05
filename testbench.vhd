@@ -17,7 +17,7 @@ architecture tb of receptor_control_remoto_tb is
         cmd         :    out std_logic_vector (7 downto 0));
     end component;
     --Constantes
-    constant T_clk      :    time := 187.5 us;
+    constant T_clk      :    time := 93.75 us;
     constant pulso      :    time := 562.5 us;
     constant byte_dir     :    std_logic_vector (7 downto 0) := "00000000";
     constant byte_cmd     :    std_logic_vector (7 downto 0) := "11111111";

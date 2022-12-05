@@ -15,12 +15,12 @@ file . "det_tiempo.vhd" "30270ebfb19bb92885f5ba470d64e2a56c8c5ef0" "202212011328
 file . "det_flanco.vhd" "8b10541d188219b68ed40170425ee787d8cb8b1e" "20221201132840.618":
   entity det_flanco at 1( 0) + 0 on 4;
   architecture solucion of det_flanco at 15( 354) + 0 on 4;
-file . "design.vhd" "e421e7c676b62251ae2b946b32a816014e6a43bb" "20221205185407.873":
+file . "design.vhd" "75b730f842a405f4ea9850aae37e69b264e50f55" "20221205190358.004":
   entity receptor_control_remoto at 1( 0) + 0 on 13;
   architecture solucion of receptor_control_remoto at 18( 478) + 0 on 14;
 file . "contador.vhd" "b06f4a68f52d7c7f1831d5042e69c7256f1cc43c" "20221201132840.618":
   entity contador at 1( 0) + 0 on 4;
   architecture solucion of contador at 19( 456) + 0 on 4;
-file . "testbench.vhd" "4e1aff88522f3b45704af83df5fbfd752c289154" "20221205185407.873":
+file . "testbench.vhd" "4e1aff88522f3b45704af83df5fbfd752c289154" "20221205190358.004":
   entity receptor_control_remoto_tb at 1( 0) + 0 on 11;
   architecture tb of receptor_control_remoto_tb at 8( 141) + 0 on 12;

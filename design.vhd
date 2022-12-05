@@ -17,4 +17,9 @@ end receptor_control_remoto;
 
 architecture solucion of receptor_control_remoto is 
 begin 
+
+
+valido <= '1';
+cmd <= x"FF";
+dir <= x"00";
 end solucion;
