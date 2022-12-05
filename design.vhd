@@ -44,6 +44,9 @@ begin
         wait;
         if tipo_pulso and unsigned (tiempo_pulso) = 24 then
             entrada <= inicio;
+            entrada_val <= not entrada_val;
+            wait;
+            
         end if;
     end if;
     if not tipo_pulso and unsigned (tiempo_pulso) = 6 then
@@ -52,8 +55,14 @@ begin
             case (unsigned (tiempo_pulso) )  is
                 when 6 =>   
                     entrada <= bit_0;
+                    entrada_val <= not entrada_val;
+                    wait;
+                    
                 when 24=>
                     entrada <= bit_1;
+                    entrada_val <= not entrada_val;
+                    wait;
+                    
             end case;
         end if;
     end if;
@@ -93,6 +102,36 @@ case (actual) is
     end case;
 
     end if;
+end process;
+
+byte : process (entrada,entrada_val,estado)
+
+variable valid : std_logic;
+
+begin    
+        byte_completo <= '0';      
+        byte_loop for n in 0 to 31 loop
+            case (entrada) is
+                bit_0 =>  
+                    byte_ (n) <= '0';   -- como terminar el proceso si no recibo un bit?
+                bit_1 => 
+                    byte_ (n) <= '1';
+            end case;
+            wait;
+        end loop;
+        byte_completo;
+end process;
+
+byte_valid_process : process
+    begin
+no_byte_loop for n in 0 to 7 loop
+    if byte_ (n+8) = byte_ (n) and byte_(n+16) = byte_(n+24) then
+        valid<='1';
+    else 
+        valid<='0'; -- es necesario aclarar ambos si no salimso del process?
+    end if;   
+end loop;
+
 end process;
 
 
