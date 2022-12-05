@@ -117,4 +117,5 @@ begin
         end if;
         finish;
     end process;
+    
 end tb;
