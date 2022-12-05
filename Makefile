@@ -9,8 +9,6 @@ all : test
 test: $(arch_cf) 
 	ghdl -m --std=08 $(tb)
 	ghdl -r --std=08 $(tb)
-$(arch_cf): *.vhd
-	ghdl -i --std=08 *.vhd
 
 wav: $(arch_wav)
 	gtkwave -f $(arch_wav)
