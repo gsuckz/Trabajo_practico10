@@ -90,7 +90,7 @@ habilitacion_medicion : process (infrarrojo,clk)
         end if;
     end process;
 
-decod_entrada : process (clk)
+decod_entrada : process (all)
     begin
             case duracion_prev is 
                 when "0110000" => if unsigned(duracion) = 24 then
@@ -101,18 +101,18 @@ decod_entrada : process (clk)
                                 elsif  unsigned(duracion) = 9 then
                                     entrada <= bit_1;
                                 end if;                  
-                when others => entrada <= err; 
+                when others => 
             end case;                         
     end process; 
     
-memoria_estado : process (clk)
+memoria_estado : process (all)
     begin
         if rising_edge(clk) then
             estado_actual <= estado_sig;
         end if;
     end process;
 
-estado_siguiente : process (clk)
+estado_siguiente : process (all)
     begin         
             case (estado_actual) is
                 when esp => if entrada = inicio then
@@ -120,7 +120,7 @@ estado_siguiente : process (clk)
                             else
                                 estado_sig <= esp;
                             end if;
-                when recibiendo => if entrada /= bit_0 or entrada /= bit_1 or entrada /= inicio then
+                when recibiendo => if not (entrada = bit_0 or entrada = bit_1 or entrada = inicio) then
                                 estado_sig <= esp;    
                             end if;     
                 when others => estado_sig <= esp;
@@ -132,7 +132,7 @@ estado_siguiente : process (clk)
    -- ?? <= sipo_q;
         
     
-leer_datos : process (clk)
+leer_datos : process (all)
     begin       
             if entrada = bit_1 then
                 serial_data <= '1';
@@ -141,7 +141,7 @@ leer_datos : process (clk)
             end if;
         
         if estado_actual = recibiendo then
-            hab_sipo <= hab_med;
+            hab_sipo <= hab_med ;
         else 
             hab_sipo <= '0';    
         end if;
