@@ -31,14 +31,16 @@ end component;
 
 type estado is (reset,esp,recibiendo);
 type codigo is (bit_1,bit_0,inicio,fin,err);
-signal estado_actual,estado_sig                         : estado;
+signal estado_actual,estado_sig                 : estado;
 signal tiempo_pulso ,tiempo_pulso_sig           : std_logic_vector (6 downto 0);
 signal duracion, duracion_prev                  : std_logic_vector (6 downto 0);
-signal tipo_pulso,tipo_pulso_sig                : std_logic_vector (0 downto 0);
+signal tipo_pulso,tipo_pulso_D                  : std_logic_vector (0 downto 0);
 signal hab_med,hab_sipo                         : std_logic;
 signal entrada                                  : codigo;
 signal sipo_d,sipo_q                            : std_logic_vector (31 downto 0);
 signal serial_data                              : std_logic;
+signal contador_bits_D, contador_bits_Q         : std_logic_vector (4 downto 0);
+signal entrada_val                           : std_logic;
 begin 
 --conectamos elementos de memoria
 contador_tiempo : ffd 
@@ -47,7 +49,7 @@ contador_tiempo : ffd
 
 tipo_pulso_mem : ffd --es prescindible?
     generic map (N => 1)
-    port map (rst=>rst , hab=>hab , clk => clk , D => tipo_pulso_sig, Q => tipo_pulso);
+    port map (rst=>rst , hab=>hab , clk => clk , D => tipo_pulso_D, Q => tipo_pulso);
 
 medicion_tiempo : ffd 
     generic map (N =>7)
@@ -63,22 +65,37 @@ SIPO : ffd
 
 sipo_d(30 downto 0) <= sipo_q(31 downto 1);
 
+Contador_bits : ffd 
+    generic map (N => 5)
+    port map (rst=> rst, hab => hab , clk => clk , D=> contador_bits_D, Q=> contador_bits_Q);
+
+
+
+
 
 
 
 
 --describimos logica de estado siguiente
-tiempo_pulso_sigp : process (infrarrojo,tiempo_pulso)  --La L.C que define a una señal se etiqueta como "nombreseñal"&lc
+transicion_tiempo_pulso : process (infrarrojo,tiempo_pulso)  --La L.C que define a una señal se etiqueta como "nombreseñal"&p
     begin
-        if infrarrojo'event then
+        if infrarrojo /=  then --cambiar por detector de flanco
             tiempo_pulso_sig <= "0000001";
-        elsif unsigned(tiempo_pulso) < 50 then
+        elsif unsigned(tiempo_pulso) > 0 then
             tiempo_pulso_sig <= std_logic_vector(unsigned(tiempo_pulso) + 1);
         else 
             tiempo_pulso_sig <= (others => '0');     
         end if;
     end  process;
 
+logica_tipo_pulso : process (clk)
+    begin
+        if infrarrojo = '0'  and hab_med then
+            tipo_pulso_D <= "0";
+        elsif infrarrojo = '1'  and hab_med then
+            tipo_pulso_D <= "1";
+        end if;
+    end process;
 
 habilitacion_medicion : process (infrarrojo,clk)
     begin
@@ -92,22 +109,28 @@ habilitacion_medicion : process (infrarrojo,clk)
 
 decod_entrada : process (all)
     begin
+            if falling_edge(hab_med) then
+                entrada_val <= '0';
+            end if;
             case duracion_prev is 
-                when "0110000" => if unsigned(duracion) = 24 then
+                when "0110000" => if unsigned(duracion) = 24 and tipo_pulso = "0" and hab_med = '1' then
                                     entrada <= inicio;
+                                    entrada_val <= '1';
                                 end if;
-                when "0000011" => if unsigned(duracion) = 3 then
+                when "0000011" => if unsigned(duracion) = 3 and tipo_pulso = "0"  and hab_med = '1' then
                                     entrada <= bit_0;
-                                elsif  unsigned(duracion) = 9 then
+                                    entrada_val <= '1';
+                                elsif  unsigned(duracion) = 9 and tipo_pulso = "0" and hab_med = '1' then
                                     entrada <= bit_1;
+                                    entrada_val <= '1';
                                 end if;                  
-                when others => 
+                when others => entrada <= err;
             end case;                         
     end process; 
     
-memoria_estado : process (all)
+memoria_estado : process (clk)
     begin
-        if rising_edge(clk) then
+        if rising_edge(clk) and entrada_val = '1' then
             estado_actual <= estado_sig;
         end if;
     end process;
@@ -120,9 +143,16 @@ estado_siguiente : process (all)
                             else
                                 estado_sig <= esp;
                             end if;
-                when recibiendo => if not (entrada = bit_0 or entrada = bit_1 or entrada = inicio) then
+                when recibiendo => if entrada /= bit_0 and entrada /= bit_1 and entrada /= inicio then
                                 estado_sig <= esp;    
-                            end if;     
+                            else
+                                estado_sig <= recibiendo;
+                            end if;  
+                when reset =>   if entrada = inicio then 
+                                    estado_sig <= recibiendo;
+                                else 
+                                    estado_sig <= esp;
+                                end if;              
                 when others => estado_sig <= esp;
             end case;
     end process; 
@@ -134,14 +164,13 @@ estado_siguiente : process (all)
     
 leer_datos : process (all)
     begin       
-            if entrada = bit_1 then
-                serial_data <= '1';
-            else
-                serial_data <= '0';
-            end if;
-        
+        if entrada = bit_1 then
+            serial_data <= '1';
+        else
+            serial_data <= '0';
+        end if;
         if estado_actual = recibiendo then
-            hab_sipo <= hab_med ;
+            hab_sipo <= entrada_val;
         else 
             hab_sipo <= '0';    
         end if;
@@ -152,25 +181,6 @@ cmd <= sipo_q(15 downto 8);
 
 dir <= sipo_q(7 downto 0);
         
-        
-                   
-            
-
-
-
-
-                    
-                     
-        
-        
-
-
-
-
-
-
-
-
 
 
 end solucion;
