@@ -15,7 +15,6 @@ entity receptor_control_remoto is
 
 end receptor_control_remoto;
 
-
 architecture solucion of receptor_control_remoto is 
 
 component ffd is
@@ -29,161 +28,328 @@ component ffd is
         Q   : out std_logic_vector (N-1 downto 0));
 end component;
 
-type estado is (reset,esp,recibiendo);
-type codigo is (bit_1,bit_0,inicio,fin,err);
-signal estado_actual,estado_sig                 : estado;
-signal tiempo_pulso ,tiempo_pulso_sig           : std_logic_vector (6 downto 0);
-signal duracion, duracion_prev                  : std_logic_vector (6 downto 0);
-signal tipo_pulso,tipo_pulso_D                  : std_logic_vector (0 downto 0);
-signal hab_med,hab_sipo                         : std_logic;
-signal entrada                                  : codigo;
-signal sipo_d,sipo_q                            : std_logic_vector (31 downto 0);
-signal serial_data                              : std_logic;
-signal contador_bits_D, contador_bits_Q         : std_logic_vector (4 downto 0);
-signal entrada_val                           : std_logic;
+type tipos_estado is (reset_state, load_dir, load_cmd, check_cmd, check_dir);
+type codigo is (bit_0, bit_1, inicio, rep, none);
+
+signal cuenta,cuenta_D                  : std_logic_vector (2 downto 0); -- contador de bits recibidos
+signal dir_d, cmd_d, dir_out, cmd_out   : std_logic_vector (7 downto 0);   
+signal hab_out, hab_L_cmd, hab_L_dir    : std_logic;
+signal bit_dir_selected                 : std_logic;
+signal bit_cmd_selected                 : std_logic;
+
+signal estado,estado_sig                : tipos_estado;
+signal code                             : codigo;
+signal valid,valid_D                    : std_logic_vector ( 0 downto 0);
+
 begin 
---conectamos elementos de memoria
-contador_tiempo : ffd 
-    generic map (N=>7)
-    port map (rst=>rst , hab=>hab , clk => clk , D => tiempo_pulso_sig , Q => tiempo_pulso);
-
-tipo_pulso_mem : ffd --es prescindible?
-    generic map (N => 1)
-    port map (rst=>rst , hab=>hab , clk => clk , D => tipo_pulso_D, Q => tipo_pulso);
-
-medicion_tiempo : ffd 
-    generic map (N =>7)
-    port map (rst=>rst , hab=>hab_med , clk => clk , D => tiempo_pulso, Q => duracion);
-
-duracion_anterior : ffd
-    generic map (N=>7)
-    port map (rst=>rst , hab=>hab_med , clk => clk , D => duracion, Q => duracion_prev);
-
-SIPO : ffd
-    generic map (N=>32)
-    port map (rst=>rst , hab=>hab_sipo , clk => clk , D => sipo_d, Q => sipo_q);
-
-sipo_d(30 downto 0) <= sipo_q(31 downto 1);
-
-Contador_bits : ffd 
-    generic map (N => 5)
-    port map (rst=> rst, hab => hab , clk => clk , D=> contador_bits_D, Q=> contador_bits_Q);
-
-
-
-
-
-
-
-
---describimos logica de estado siguiente
-transicion_tiempo_pulso : process (infrarrojo,tiempo_pulso)  --La L.C que define a una señal se etiqueta como "nombreseñal"&p
+    process (clk, rst)
     begin
-        if infrarrojo /=  then --cambiar por detector de flanco
-            tiempo_pulso_sig <= "0000001";
-        elsif unsigned(tiempo_pulso) > 0 then
-            tiempo_pulso_sig <= std_logic_vector(unsigned(tiempo_pulso) + 1);
-        else 
-            tiempo_pulso_sig <= (others => '0');     
-        end if;
-    end  process;
-
-logica_tipo_pulso : process (clk)
-    begin
-        if infrarrojo = '0'  and hab_med then
-            tipo_pulso_D <= "0";
-        elsif infrarrojo = '1'  and hab_med then
-            tipo_pulso_D <= "1";
+        if rst = '1' then
+            estado <= reset_state;
+        elsif rising_edge(clk) then
+            estado <= estado_sig;
         end if;
     end process;
-
-habilitacion_medicion : process (infrarrojo,clk)
-    begin
-        if rising_edge(clk) then
-            hab_med <= '0'; --puede generar problemas por el tiempo de setup?
-        end if;
-        if infrarrojo'event then
-            hab_med <= '1';
+contador : ffd 
+    generic map (N => 3)
+    port map( 
+    rst => rst,
+    hab => hab,
+    clk => clk,
+    Q => cuenta,
+    D => cuenta_D);
+valid_flag : ffd
+    generic map (N=>1)
+    port map(
+        rst => rst,
+        hab => hab,
+        clk => clk,
+        Q   => valid,
+        D   => valid_D
+    );
+cmd_out_memory : ffd
+    generic map (N=>8)
+    port map(
+        rst => rst,
+        hab => hab_out,
+        clk => clk,
+        Q   => cmd,
+        D   => cmd_out
+    )   ;  
+cmd_R_memory : ffd
+    generic map (N=>8)
+    port map(
+        rst => rst,
+        hab => hab_L_cmd,
+        clk => clk,
+        Q   => cmd_out,
+        D   => cmd_d
+    )   ;  
+dir_out_memory : ffd
+    generic map (N=>8)
+    port map(
+        rst => rst,
+        hab => hab_out,
+        clk => clk,
+        Q   => dir,
+        D   => dir_out
+    )   ;
+dir_memory : ffd
+    generic map (N=>8)
+    port map(
+        rst => rst,
+        hab => hab_L_dir,
+        clk => clk,
+        Q   => dir_out,
+        D   => dir_d
+    )  ;  
+dir_d(6 downto 0) <= dir_out(7 downto 1);   
+cmd_d(6 downto 0) <= cmd_out(7 downto 1);   
+process (all)
+    begin  
+    dir_d(7) <= '0';
+    cmd_d(7) <= '0';          
+        if code = bit_1  then
+            dir_d(7) <= '1';
+            cmd_d(7) <= '1';
         end if;
     end process;
-
-decod_entrada : process (all)
+mux_cmd : with cuenta select 
+bit_cmd_selected <= cmd(0) when "000",
+                  cmd(1) when "001",
+                  cmd(2) when "010",
+                  cmd(3) when "011",
+                  cmd(4) when "100",
+                  cmd(5) when "101",
+                  cmd(6) when "110",
+                  cmd(7) when others;                     
+mux_dir : with cuenta select 
+bit_dir_selected <= dir(0) when "000",
+                 dir(1) when "001",
+                 dir(2) when "010",
+                 dir(3) when "011",
+                 dir(4) when "100",
+                 dir(5) when "101",
+                 dir(6) when "110",
+                 dir(7) when others;                   
+process (all)
     begin
-            if falling_edge(hab_med) then
-                entrada_val <= '0';
+        case (estado) is
+            when reset_state =>
+                case (code) is 
+                    when bit_0 =>       estado_sig <=reset_state;
+                        cuenta_D <= (others => '0');
+                        valid_D <=  valid;
+                        hab_out <= '0';
+                        hab_L_dir <= '0';
+                        hab_L_cmd <= '0';
+                    when bit_1 =>       estado_sig <=reset_state;
+                        cuenta_D <= (others => '0');
+                        valid_D <= valid;
+                        hab_out <= '0';
+                        hab_L_dir <= '0';
+                        hab_L_cmd <= '0';
+                    when inicio =>      estado_sig <=load_dir;
+                        cuenta_D <= (others => '0');
+                        valid_D <=  (others => '0');
+                        hab_out <= '0';
+                        hab_L_dir <= '0';
+                        hab_L_cmd <= '0';
+                    when rep =>         estado_sig <=reset_state;
+                        cuenta_D <= (others => '0');
+                        valid_D <= valid;
+                        hab_out <= '0';
+                        hab_L_dir <= '0';
+                        hab_L_cmd <= '0';
+                    when others =>      estado_sig <=reset_state;
+                end case;
+            when load_dir =>
+                case (code) is 
+                    when (bit_0)  =>       estado_sig <=load_dir;
+                        cuenta_D <= std_logic_vector ( unsigned (cuenta) + 1);
+                        valid_D <= valid;
+                        hab_out     <= '0';
+                        hab_L_dir   <= '1';
+                        hab_L_cmd   <= '0'; --podria poner un if y no hacer el otro case? 
+                        if unsigned (cuenta) = 8 then 
+                            estado_sig <= check_dir;
+                            hab_L_dir <= '0';
+                        end if;
+                        when (bit_1)  =>       estado_sig <=load_dir;
+                        cuenta_D <= std_logic_vector ( unsigned (cuenta) + 1);
+                        valid_D <= valid;
+                        hab_out     <= '0';
+                        hab_L_dir   <= '1';
+                        hab_L_cmd   <= '0'; --podria poner un if y no hacer el otro case? 
+                        if unsigned (cuenta) = 8 then 
+                            estado_sig <= check_dir;
+                            hab_L_dir <= '0';
+                        end if;                                    
+                    when inicio =>      estado_sig <=load_dir;
+                        cuenta_D <= (others => '0');
+                        valid_D <=valid;
+                        hab_out <= '0';
+                        hab_L_dir <= '0';
+                        hab_L_cmd <= '0';
+                    when rep =>         estado_sig <=reset_state;
+                        cuenta_D <= (others => '0');
+                        valid_D <=valid;
+                        hab_out <= '0';
+                        hab_L_dir <= '0';
+                        hab_L_cmd <= '0';
+                    when others =>      estado_sig <=load_dir;
+                        cuenta_D <= cuenta;
+                        valid_D <=valid;
+                        hab_out <= '0';
+                        hab_L_dir <= '0';
+                        hab_L_cmd <= '0';                       
+                end case;
+                if unsigned (cuenta) = 8 then 
+                    estado_sig <= check_dir;
+                    hab_L_dir <= '0';
+                end if;
+            when check_dir => 
+                case (code) is 
+                    when bit_0 =>       estado_sig <=check_dir;
+                    cuenta_D <= std_logic_vector ( unsigned (cuenta) + 1);
+                    valid_D <= valid;
+                    hab_out     <= '0';
+                    hab_L_dir   <= '0';
+                    hab_L_cmd   <= '0'; 
+                    if bit_dir_selected  = '0' then
+                        estado_sig <= reset_state;
+                    end if;
+                    when bit_1 =>       estado_sig <=check_dir;
+                    cuenta_D <= std_logic_vector ( unsigned (cuenta) + 1);
+                    valid_D <= valid;
+                    hab_out     <= '0';
+                    hab_L_dir   <= '0';
+                    hab_L_cmd   <= '0'; 
+                    if bit_dir_selected = '1' then
+                        estado_sig <= reset_state;
+                    end if;
+                    when inicio =>      estado_sig <=load_dir;
+                    cuenta_D <= (others => '0');
+                    valid_D <=  (others => '0');
+                    hab_out <= '0';
+                    hab_L_dir <= '0';
+                    hab_L_cmd <= '0';
+                    when rep =>         estado_sig <=reset_state;
+                    cuenta_D <= (others => '0');
+                    valid_D <=  (others => '0');
+                    hab_out <= '0';
+                    hab_L_dir <= '0';
+                    hab_L_cmd <= '0';
+                    when others =>      estado_sig <=check_dir;
+                    cuenta_D <= cuenta;
+                    valid_D <=  valid;
+                    hab_out <= '0';
+                    hab_L_dir <= '0';
+                    hab_L_cmd <= '0';          
+                end case;
+                if unsigned (cuenta)= 8 then 
+                    estado_sig <= load_cmd;
+                    hab_L_cmd <= '1';
+                end if;
+            when load_cmd => 
+            case (code) is 
+            when (bit_0) =>      estado_sig <=load_dir;
+            cuenta_D <= std_logic_vector ( unsigned (cuenta) + 1);
+            valid_D <= valid;
+            hab_out     <= '0';
+            hab_L_dir   <= '0';
+            hab_L_cmd   <= '1'; --podria poner un if y no hacer el otro case? 
+            if unsigned (cuenta) = 8 then 
+                estado_sig <= check_cmd;
+                hab_L_cmd <= '0';
             end if;
-            case duracion_prev is 
-                when "0110000" => if unsigned(duracion) = 24 and tipo_pulso = "0" and hab_med = '1' then
-                                    entrada <= inicio;
-                                    entrada_val <= '1';
-                                end if;
-                when "0000011" => if unsigned(duracion) = 3 and tipo_pulso = "0"  and hab_med = '1' then
-                                    entrada <= bit_0;
-                                    entrada_val <= '1';
-                                elsif  unsigned(duracion) = 9 and tipo_pulso = "0" and hab_med = '1' then
-                                    entrada <= bit_1;
-                                    entrada_val <= '1';
-                                end if;                  
-                when others => entrada <= err;
-            end case;                         
-    end process; 
-    
-memoria_estado : process (clk)
-    begin
-        if rising_edge(clk) and entrada_val = '1' then
-            estado_actual <= estado_sig;
-        end if;
+            when (bit_1)   =>       estado_sig <=load_dir;
+            cuenta_D <= std_logic_vector ( unsigned (cuenta) + 1);
+            valid_D <= valid;
+            hab_out     <= '0';
+            hab_L_dir   <= '1';
+            hab_L_cmd   <= '1'; --podria poner un if y no hacer el otro case? 
+            if unsigned (cuenta) = 8 then 
+                estado_sig <= check_cmd;
+                hab_L_cmd <= '0';
+            end if;     
+                    when inicio =>      estado_sig <=load_dir;
+                    cuenta_D <= (others => '0');
+                    valid_D <=valid;
+                    hab_out <= '0';
+                    hab_L_dir <= '0';
+                    hab_L_cmd <= '0';
+                    when rep =>         estado_sig <=reset_state;
+                    cuenta_D <= (others => '0');
+                    valid_D <=valid;
+                    hab_out <= '0';
+                    hab_L_dir <= '0';
+                    hab_L_cmd <= '0';
+                    when others =>      estado_sig <=load_cmd;
+                    cuenta_D <= cuenta;
+                    valid_D <=valid;
+                    hab_out <= '0';
+                    hab_L_dir <= '0';
+                    hab_L_cmd <= '0';
+                end case;
+                if unsigned (cuenta) = 8 then 
+                    estado_sig <= check_cmd;
+                    hab_L_cmd <= '0';
+                end if;
+            when check_cmd => 
+                case (code) is 
+                    when bit_0 =>       estado_sig <=check_cmd;
+                    cuenta_D <= std_logic_vector ( unsigned (cuenta) + 1);
+                    valid_D <= valid;
+                    hab_out     <= '0';
+                    hab_L_dir   <= '0';
+                    hab_L_cmd   <= '0'; 
+                    if bit_cmd_selected  = '1' then
+                        estado_sig <= reset_state;
+                    end if;
+                    when bit_1 =>       estado_sig <=check_cmd;
+                    cuenta_D <= std_logic_vector ( unsigned (cuenta) + 1);
+                    valid_D <= valid;
+                    hab_out     <= '0';
+                    hab_L_dir   <= '0';
+                    hab_L_cmd   <= '0'; 
+                    if bit_cmd_selected = '1' then
+                        estado_sig <= reset_state;
+                    end if;
+                    when inicio =>      estado_sig <=load_dir;
+                    cuenta_D <= cuenta;
+                    valid_D <=valid;
+                    hab_out <= '0';
+                    hab_L_dir <= '0';
+                    hab_L_cmd <= '0';
+                    when rep =>         estado_sig <=reset_state;
+                    cuenta_D <= cuenta;
+                    valid_D <=valid;
+                    hab_out <= '0';
+                    hab_L_dir <= '0';
+                    hab_L_cmd <= '0';
+                    when others =>      estado_sig <=check_cmd;
+                    cuenta_D <= cuenta;
+                    valid_D <=valid;
+                    hab_out <= '0';
+                    hab_L_dir <= '0';
+                    hab_L_cmd <= '0';
+                end case;
+                if unsigned (cuenta) = 8 then 
+                    estado_sig <= reset_state;
+                    valid_D <= (others => '1');           
+                    hab_out<='1';
+                end if;
+            when others => estado_sig <= reset_state;
+            cuenta_D <= cuenta;
+            valid_D <=valid;
+            hab_out <= '0';
+            hab_L_dir <= '0';
+            hab_L_cmd <= '0';
+        end case;
     end process;
-
-estado_siguiente : process (all)
-    begin         
-            case (estado_actual) is
-                when esp => if entrada = inicio then
-                                estado_sig <= recibiendo;
-                            else
-                                estado_sig <= esp;
-                            end if;
-                when recibiendo => if entrada /= bit_0 and entrada /= bit_1 and entrada /= inicio then
-                                estado_sig <= esp;    
-                            else
-                                estado_sig <= recibiendo;
-                            end if;  
-                when reset =>   if entrada = inicio then 
-                                    estado_sig <= recibiendo;
-                                else 
-                                    estado_sig <= esp;
-                                end if;              
-                when others => estado_sig <= esp;
-            end case;
-    end process; 
-    
-    sipo_d(31) <= serial_data;
-  
-   -- ?? <= sipo_q;
-        
-    
-leer_datos : process (all)
-    begin       
-        if entrada = bit_1 then
-            serial_data <= '1';
-        else
-            serial_data <= '0';
-        end if;
-        if estado_actual = recibiendo then
-            hab_sipo <= entrada_val;
-        else 
-            hab_sipo <= '0';    
-        end if;
-    end process; 
-    
-cmd <= sipo_q(15 downto 8);
-
-
-dir <= sipo_q(7 downto 0);
-        
-
-
 end solucion;
+
 
 
 
