@@ -36,10 +36,10 @@ signal dir_d, cmd_d, dir_out, cmd_out   : std_logic_vector (7 downto 0);
 signal hab_out, hab_L_cmd, hab_L_dir    : std_logic;
 signal bit_dir_selected                 : std_logic;
 signal bit_cmd_selected                 : std_logic;
-signal rst_clk                         : std_logic;
+signal rst_clk                          : std_logic;
 signal clk_c, clk_c_d                   : integer range 0 to 100;
 signal tipo, tipo_d, prev               : std_logic_vector (1 downto 0);
-signal flag,flag2,flag3                             : std_logic;
+signal flag,flag2,flag3                 : std_logic;
 signal prev_D                           :std_logic_vector (1 downto 0);
 
 signal estado,estado_sig                : tipos_estado;
