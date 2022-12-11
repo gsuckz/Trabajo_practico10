@@ -36,10 +36,16 @@ signal dir_d, cmd_d, dir_out, cmd_out   : std_logic_vector (7 downto 0);
 signal hab_out, hab_L_cmd, hab_L_dir    : std_logic;
 signal bit_dir_selected                 : std_logic;
 signal bit_cmd_selected                 : std_logic;
+signal rst_clk                         : std_logic;
+signal clk_c, clk_c_d                   : std_logic_vector (7 downto 0);
+signal tipo, tipo_d, prev               : std_logic_vector (1 downto 0);
+signal flag,flag2,flag3                             : std_logic;
+signal prev_D                           :std_logic_vector (1 downto 0);
 
 signal estado,estado_sig                : tipos_estado;
 signal code                             : codigo;
 signal valid,valid_D                    : std_logic_vector ( 0 downto 0);
+
 
 begin 
     process (clk, rst)
@@ -348,6 +354,89 @@ process (all)
             hab_L_cmd <= '0';
         end case;
     end process;
+
+contador_clk : ffd
+generic map (N => 8)
+port map( 
+rst => rst,
+hab => hab,
+clk => clk,
+Q => clk_c,
+D => clk_c_d);
+
+tipo_clk : ffd
+generic map (N => 2)
+port map( 
+rst => rst,
+hab => hab,
+clk => clk,
+Q => tipo,
+D => tipo_d);
+
+prev_ff : ffd
+generic map (N => 2)
+port map( 
+rst => rst,
+hab => hab,
+clk => clk,
+Q => prev,
+D => prev_d);
+
+tipo_d(1) <= infrarrojo;
+tipo_d(0) <= tipo(1);
+
+contador_clk_logica : process (all)
+    begin 
+        clk_c_d <= std_logic_vector ( unsigned(clk_c) + 1);
+        if unsigned(clk_c) = 70 then
+            clk_c_d <= clk_c;
+        end if;
+        if rst_clk then
+            clk_c_d <= (others => '0');
+        end if;
+    end process;
+
+
+    codigo_logica : process (all)
+    begin
+        code <= none;
+        rst_clk <= '0';
+        prev_d <= "00";
+        if tipo (0) /= tipo (1) then
+            rst_clk <= '1';
+            flag <= '0';
+            if tipo (1) = '0' then
+                case (clk_c) is
+                    when  "00100110" | "01010000"     => prev_d <= "01"; flag2<= '1';
+                    when  "00000001" | "00000111"     => prev_d <= "10"; flag3 <= '1';
+                    when others => code <= none;
+                    flag <= '1';
+                end case;
+            end if;            
+            if prev = "10" and tipo (1)= '1' then
+                prev_d <= "00";
+                case (clk_c) is
+                    when  "00000001" | "00000101"   => code <= bit_0;
+                    when  "00000111" | "00001111"   => code <= bit_1;
+                    when others => code <= none;
+                end case;
+            end if;
+            if prev = "01" and tipo (1) = '1' and (unsigned(clk_c)) = 20 then
+                prev_d <= "00";
+                code <= inicio;
+                end if;
+        end if;        
+    end process;           
+
+                
+
+
+    
+
+
+
+
+
 end solucion;
 
 
