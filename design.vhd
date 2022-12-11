@@ -41,7 +41,6 @@ signal clk_c, clk_c_d                   : integer range 0 to 100;
 signal tipo, tipo_d, prev               : std_logic_vector (1 downto 0);
 signal flag,flag2,flag3                             : std_logic;
 signal prev_D                           :std_logic_vector (1 downto 0);
-signal hab_L_dir_1, hab_L_cmd_1         :std_logic;
 
 signal estado,estado_sig                : tipos_estado;
 signal code                             : codigo;
@@ -87,7 +86,7 @@ cmd_R_memory : ffd
     generic map (N=>8)
     port map(
         rst => rst,
-        hab => hab_L_cmd_1 ,
+        hab => hab_L_cmd ,
         clk => clk,
         Q   => cmd_out,
         D   => cmd_d
@@ -105,14 +104,13 @@ dir_memory : ffd
     generic map (N=>8)
     port map(
         rst => rst,
-        hab => hab_L_dir_1 ,
+        hab => hab_L_dir ,
         clk => clk,
         Q   => dir_out,
         D   => dir_d
     )  ;  
 valido <= valid(0);
-hab_L_dir_1 <= '1' when hab_L_dir = '1' and (code = bit_0 or code = bit_1) else '0';  
-hab_L_cmd_1 <= '1' when hab_L_cmd = '1' and (code = bit_0 or code = bit_1) else '0';
+
 dir_d(6 downto 0) <= dir_out(7 downto 1);   
 cmd_d(6 downto 0) <= cmd_out(7 downto 1);   
 process (all)
@@ -213,7 +211,7 @@ process (all)
                         cuenta_D <= cuenta;
                         valid_D <=valid;
                         hab_out <= '0';
-                        hab_L_dir <= '1';
+                        hab_L_dir <= '0';
                         hab_L_cmd <= '0';                       
                 end case;
 
@@ -242,7 +240,6 @@ process (all)
                     hab_L_cmd   <= '0'; 
                     if unsigned (cuenta)= 7 then 
                     estado_sig <= load_cmd;
-                    hab_L_cmd <= '1';
                     cuenta_D <= (others => '0');
                     end if;
                     if bit_dir_selected = '1' then
@@ -447,16 +444,6 @@ contador_clk_logica : process (clk)
             end if;
         end if;        
     end process;           
-
-                
-
-
-    
-
-
-
-
-
 end solucion;
 
 
