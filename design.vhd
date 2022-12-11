@@ -28,7 +28,7 @@ component ffd is
         Q   : out std_logic_vector (N-1 downto 0));
 end component;
 
-type tipos_estado is (reset_state, load_dir, load_cmd, check_cmd, check_dir);
+type tipos_estado is (reset_state, load_dir, load_cmd, check_cmd, check_dir, rep_state);
 type codigo is (bit_0, bit_1, inicio, rep, none);
 
 signal cuenta,cuenta_D                  : std_logic_vector (2 downto 0); -- contador de bits recibidos
@@ -41,6 +41,7 @@ signal clk_c, clk_c_d                   : integer range 0 to 100;
 signal tipo, tipo_d, prev               : std_logic_vector (1 downto 0);
 signal flag,flag2,flag3                 : std_logic;
 signal prev_D                           :std_logic_vector (1 downto 0);
+signal valid_count, valid_count_D       : std_logic_vector (6 downto 0);
 
 signal estado,estado_sig                : tipos_estado;
 signal code                             : codigo;
@@ -148,8 +149,8 @@ process (all)
         if unsigned (valid_count) = 100 then 
             valid_count_d <= valid_count;
         end if;
-        if valid = '0' then 
-            valid_count <= (others => '0');
+        if valid = "0" then 
+            valid_count_d <= (others => '0');
         end if;
     end process;
 
@@ -177,7 +178,7 @@ process (all)
         case (estado) is
             when rep_state =>
                 cuenta_D <= (others => '0');
-                valid_D <= '1';
+                valid_D <= "1";
                 hab_out <= '0';
                 hab_L_dir <= '0';
                 hab_L_cmd <= '0';
@@ -213,7 +214,7 @@ process (all)
                                         valid_D <= valid;
                                         cuenta_D <= (others => '0');
                                         if unsigned (valid_count) < 100 then
-                                            valid_D <= '0';
+                                            valid_D <= "0";
                                             estado_sig <= rep_state;
                                         end if;
                                         hab_out <= '0';
@@ -485,8 +486,8 @@ codigo_logica : process (all)
                 case (clk_c)is 
                     when 15 to 25   =>  prev_d  <=  "00";
                                         code    <=  inicio;
-                    when 4 to 8     =>  code    <= rep;
-                                        prev    <= "00";                    
+                    when 4 to 14     =>  code    <= rep;
+                                        prev_d    <= "00";                    
                     when others     =>  code    <=  none;
                 end case;
             end if;

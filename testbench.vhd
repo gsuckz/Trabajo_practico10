@@ -109,6 +109,14 @@ begin
         infrarrojo_in <= '0';
         wait for pulso;
         infrarrojo_in <= '1';
+        wait for 10*pulso;        
+        infrarrojo_in <= '0';
+        wait for 9000 us;
+        infrarrojo_in <= '1';
+        wait for 2250 us;
+        infrarrojo_in <= '0';
+        wait for pulso;
+        infrarrojo_in <= '1';
         if (valido_out /= '1' or dir_out /= byte_dir or cmd_out /= byte_cmd) then
             report "Salida distinta a la esperada"
                    & lf & "    Esperaba valido '1', dir " & to_string(byte_dir) & ", cmd " & to_string(byte_cmd)
