@@ -131,7 +131,27 @@ prev_ff : ffd
         D => prev_d
     );
 
+valid_counter_ff : ffd 
+    generic map (N => 7)
+    port map( 
+        rst => rst,
+        hab => hab,
+        clk => clk,
+        Q => valid_count,
+        D => valid_count_d
+    );    
+
 --Logica Secuencial
+process (all)
+    begin   
+        valid_count_d <= std_logic_vector( unsigned (valid_count) + 1);
+        if unsigned (valid_count) = 100 then 
+            valid_count_d <= valid_count;
+        end if;
+        if valid = '0' then 
+            valid_count <= (others => '0');
+        end if;
+    end process;
 
 process (clk, rst)
     begin
@@ -152,11 +172,22 @@ process (all)
         end if;
     end process;
                   
-process (all)
+process (all) 
     begin
         case (estado) is
+            when rep_state =>
+                cuenta_D <= (others => '0');
+                valid_D <= '1';
+                hab_out <= '0';
+                hab_L_dir <= '0';
+                hab_L_cmd <= '0';
+                --en un ciclo de reloj no puede llegar otro codigo entonces no pongo un case
+
             when reset_state =>
-                case (code) is 
+                case (code) is
+
+
+
                     when bit_0 =>       estado_sig <=reset_state;
                                         cuenta_D <= (others => '0');
                                         valid_D <=  valid;
@@ -179,8 +210,12 @@ process (all)
                                         hab_L_cmd <= '0';
 
                     when rep =>         estado_sig <=reset_state;
-                                        cuenta_D <= (others => '0');
                                         valid_D <= valid;
+                                        cuenta_D <= (others => '0');
+                                        if unsigned (valid_count) < 100 then
+                                            valid_D <= '0';
+                                            estado_sig <= rep_state;
+                                        end if;
                                         hab_out <= '0';
                                         hab_L_dir <= '0';
                                         hab_L_cmd <= '0';
@@ -450,6 +485,8 @@ codigo_logica : process (all)
                 case (clk_c)is 
                     when 15 to 25   =>  prev_d  <=  "00";
                                         code    <=  inicio;
+                    when 4 to 8     =>  code    <= rep;
+                                        prev    <= "00";                    
                     when others     =>  code    <=  none;
                 end case;
             end if;
