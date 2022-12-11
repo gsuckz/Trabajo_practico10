@@ -48,14 +48,8 @@ signal valid,valid_D                    : std_logic_vector ( 0 downto 0);
 
 
 begin 
-    process (clk, rst)
-    begin
-        if rst = '1' then
-            estado <= reset_state;
-        elsif rising_edge(clk) then
-            estado <= estado_sig;
-        end if;
-    end process;
+
+--Registros de estado
 
 contador : ffd 
     generic map (N => 3)
@@ -117,10 +111,36 @@ dir_memory : ffd
         D   => dir_d
     );
 
-valido <= valid(0);                             --log. de salida?
+tipo_clk : ffd
+    generic map (N => 2)
+    port map( 
+        rst => rst,
+        hab => hab,
+        clk => clk,
+        Q => tipo,
+        D => tipo_d
+    );
+    
+    prev_ff : ffd
+    generic map (N => 2)
+    port map( 
+        rst => rst,
+        hab => hab,
+        clk => clk,
+        Q => prev,
+        D => prev_d
+    );
 
-dir_d(6 downto 0) <= dir_out(7 downto 1);      --log. de salida?
-cmd_d(6 downto 0) <= cmd_out(7 downto 1);      --log. de salida?
+--Logica Secuencial
+
+process (clk, rst)
+    begin
+        if rst = '1' then
+            estado <= reset_state;
+        elsif rising_edge(clk) then             --cuidado con usar detector de flaco (La FPGA no lo puede detectar)
+            estado <= estado_sig;
+        end if;
+    end process;
 
 process (all)
     begin  
@@ -131,26 +151,7 @@ process (all)
             cmd_d(7) <= '1';
         end if;
     end process;
-
-mux_cmd : with cuenta select 
-bit_cmd_selected <= cmd_out(0) when "000",
-                    cmd_out(1) when "001",
-                    cmd_out(2) when "010",
-                    cmd_out(3) when "011",
-                    cmd_out(4) when "100",
-                    cmd_out(5) when "101",
-                    cmd_out(6) when "110",
-                    cmd_out(7) when others;   
-
-mux_dir : with cuenta select 
-bit_dir_selected <= dir_out(0) when "000",
-                    dir_out(1) when "001",
-                    dir_out(2) when "010",
-                    dir_out(3) when "011",
-                    dir_out(4) when "100",
-                    dir_out(5) when "101",
-                    dir_out(6) when "110",
-                    dir_out(7) when others;                   
+                  
 process (all)
     begin
         case (estado) is
@@ -403,34 +404,12 @@ process (all)
         end case;
     end process;
 
-
-tipo_clk : ffd
-generic map (N => 2)
-port map( 
-rst => rst,
-hab => hab,
-clk => clk,
-Q => tipo,
-D => tipo_d);
-
-prev_ff : ffd
-generic map (N => 2)
-port map( 
-rst => rst,
-hab => hab,
-clk => clk,
-Q => prev,
-D => prev_d);
-
-tipo_d(1) <= infrarrojo;
-tipo_d(0) <= tipo(1);
-
 contador_clk_logica : process (clk)
     begin 
     if rst = '1' then
         clk_c <= 0;
     end if;
-    if rising_edge (clk) then
+    if rising_edge (clk) then               --cuidado con usar detector de flaco (La FPGA no lo puede detectar)
         clk_c <= clk_c +1;
         if clk_c = 70 then
             clk_c <= clk_c;
@@ -475,7 +454,40 @@ codigo_logica : process (all)
                 end case;
             end if;
         end if;        
-    end process;           
+    end process; 
+
+
+mux_cmd : with cuenta select                            --es parte de logica secuencial?
+    bit_cmd_selected <= cmd_out(0) when "000",
+                        cmd_out(1) when "001",
+                        cmd_out(2) when "010",
+                        cmd_out(3) when "011",
+                        cmd_out(4) when "100",
+                        cmd_out(5) when "101",
+                        cmd_out(6) when "110",
+                        cmd_out(7) when others;   
+    
+mux_dir : with cuenta select                            --es parte de logica secuencial? 
+    bit_dir_selected <= dir_out(0) when "000",
+                        dir_out(1) when "001",
+                        dir_out(2) when "010",
+                        dir_out(3) when "011",
+                        dir_out(4) when "100",
+                        dir_out(5) when "101",
+                        dir_out(6) when "110",
+                        dir_out(7) when others; 
+
+--Logica de salida
+    
+valido <= valid(0);                             
+
+dir_d(6 downto 0) <= dir_out(7 downto 1);      
+cmd_d(6 downto 0) <= cmd_out(7 downto 1);      
+
+tipo_d(1) <= infrarrojo;
+tipo_d(0) <= tipo(1);
+
+
 end solucion;
 
 
