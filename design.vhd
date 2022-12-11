@@ -56,14 +56,17 @@ begin
             estado <= estado_sig;
         end if;
     end process;
+
 contador : ffd 
     generic map (N => 3)
     port map( 
-    rst => rst,
-    hab => hab,
-    clk => clk,
-    Q => cuenta,
-    D => cuenta_D);
+        rst => rst,
+        hab => hab,
+        clk => clk,
+        Q => cuenta,
+        D => cuenta_D
+    );
+
 valid_flag : ffd
     generic map (N=>1)
     port map(
@@ -73,6 +76,7 @@ valid_flag : ffd
         Q   => valid,
         D   => valid_D
     );
+
 cmd_out_memory : ffd
     generic map (N=>8)
     port map(
@@ -81,7 +85,8 @@ cmd_out_memory : ffd
         clk => clk,
         Q   => cmd,
         D   => cmd_out
-    )   ;  
+    );
+
 cmd_R_memory : ffd
     generic map (N=>8)
     port map(
@@ -90,7 +95,8 @@ cmd_R_memory : ffd
         clk => clk,
         Q   => cmd_out,
         D   => cmd_d
-    )   ;  
+    );
+
 dir_out_memory : ffd
     generic map (N=>8)
     port map(
@@ -99,7 +105,8 @@ dir_out_memory : ffd
         clk => clk,
         Q   => dir,
         D   => dir_out
-    )   ;
+    );
+
 dir_memory : ffd
     generic map (N=>8)
     port map(
@@ -108,11 +115,13 @@ dir_memory : ffd
         clk => clk,
         Q   => dir_out,
         D   => dir_d
-    )  ;  
-valido <= valid(0);
+    );
 
-dir_d(6 downto 0) <= dir_out(7 downto 1);   
-cmd_d(6 downto 0) <= cmd_out(7 downto 1);   
+valido <= valid(0);                             --log. de salida?
+
+dir_d(6 downto 0) <= dir_out(7 downto 1);      --log. de salida?
+cmd_d(6 downto 0) <= cmd_out(7 downto 1);      --log. de salida?
+
 process (all)
     begin  
     dir_d(7) <= '0';
@@ -122,250 +131,275 @@ process (all)
             cmd_d(7) <= '1';
         end if;
     end process;
+
 mux_cmd : with cuenta select 
 bit_cmd_selected <= cmd_out(0) when "000",
-                  cmd_out(1) when "001",
-                  cmd_out(2) when "010",
-                  cmd_out(3) when "011",
-                  cmd_out(4) when "100",
-                  cmd_out(5) when "101",
-                  cmd_out(6) when "110",
-                  cmd_out(7) when others;                     
+                    cmd_out(1) when "001",
+                    cmd_out(2) when "010",
+                    cmd_out(3) when "011",
+                    cmd_out(4) when "100",
+                    cmd_out(5) when "101",
+                    cmd_out(6) when "110",
+                    cmd_out(7) when others;   
+
 mux_dir : with cuenta select 
 bit_dir_selected <= dir_out(0) when "000",
-                 dir_out(1) when "001",
-                 dir_out(2) when "010",
-                 dir_out(3) when "011",
-                 dir_out(4) when "100",
-                 dir_out(5) when "101",
-                 dir_out(6) when "110",
-                 dir_out(7) when others;                   
+                    dir_out(1) when "001",
+                    dir_out(2) when "010",
+                    dir_out(3) when "011",
+                    dir_out(4) when "100",
+                    dir_out(5) when "101",
+                    dir_out(6) when "110",
+                    dir_out(7) when others;                   
 process (all)
     begin
         case (estado) is
             when reset_state =>
                 case (code) is 
                     when bit_0 =>       estado_sig <=reset_state;
-                        cuenta_D <= (others => '0');
-                        valid_D <=  valid;
-                        hab_out <= '0';
-                        hab_L_dir <= '0';
-                        hab_L_cmd <= '0';
+                                        cuenta_D <= (others => '0');
+                                        valid_D <=  valid;
+                                        hab_out <= '0';
+                                        hab_L_dir <= '0';
+                                        hab_L_cmd <= '0';
+
                     when bit_1 =>       estado_sig <=reset_state;
-                        cuenta_D <= (others => '0');
-                        valid_D <= valid;
-                        hab_out <= '0';
-                        hab_L_dir <= '0';
-                        hab_L_cmd <= '0';
+                                        cuenta_D <= (others => '0');
+                                        valid_D <= valid;
+                                        hab_out <= '0';
+                                        hab_L_dir <= '0';
+                                        hab_L_cmd <= '0';
+
                     when inicio =>      estado_sig <=load_dir;
-                        cuenta_D <= (others => '0');
-                        valid_D <=  (others => '0');
-                        hab_out <= '0';
-                        hab_L_dir <= '0';
-                        hab_L_cmd <= '0';
+                                        cuenta_D <= (others => '0');
+                                        valid_D <=  (others => '0');
+                                        hab_out <= '0';
+                                        hab_L_dir <= '0';
+                                        hab_L_cmd <= '0';
+
                     when rep =>         estado_sig <=reset_state;
-                        cuenta_D <= (others => '0');
-                        valid_D <= valid;
-                        hab_out <= '0';
-                        hab_L_dir <= '0';
-                        hab_L_cmd <= '0';
+                                        cuenta_D <= (others => '0');
+                                        valid_D <= valid;
+                                        hab_out <= '0';
+                                        hab_L_dir <= '0';
+                                        hab_L_cmd <= '0';
+
                     when others =>      estado_sig <=reset_state;
+
                 end case;
+
             when load_dir =>
                 case (code) is 
-                    when (bit_0)  =>       estado_sig <=load_dir;
-                        cuenta_D <= std_logic_vector ( unsigned (cuenta) + 1);
-                        valid_D <= valid;
-                        hab_out     <= '0';
-                        hab_L_dir   <= '1';
-                        hab_L_cmd   <= '0'; --podria poner un if y no hacer el otro case? 
-                        if unsigned (cuenta) = 7 then 
-                        estado_sig <= check_dir;
-                        cuenta_d <= (others => '0');
-                        end if;
+                        when (bit_0)  =>        estado_sig <=load_dir;
+                                                cuenta_D <= std_logic_vector ( unsigned (cuenta) + 1);
+                                                valid_D <= valid;
+                                                hab_out     <= '0';
+                                                hab_L_dir   <= '1';
+                                                hab_L_cmd   <= '0'; --podria poner un if y no hacer el otro case? 
+                                                if unsigned (cuenta) = 7 then 
+                                                estado_sig <= check_dir;
+                                                cuenta_d <= (others => '0');
+                                                end if;
 
-                        when (bit_1)  =>       estado_sig <=load_dir;
-                        cuenta_D <= std_logic_vector ( unsigned (cuenta) + 1);
-                        valid_D <= valid;
-                        hab_out     <= '0';
-                        hab_L_dir   <= '1';
-                        hab_L_cmd   <= '0'; --podria poner un if y no hacer el otro case?    
-                        if unsigned (cuenta) = 7 then 
-                        estado_sig <= check_dir;
-                        cuenta_d <= (others => '0');   
-                        end if;               
+                        when (bit_1)  =>        estado_sig <=load_dir;
+                                                cuenta_D <= std_logic_vector ( unsigned (cuenta) + 1);
+                                                valid_D <= valid;
+                                                hab_out     <= '0';
+                                                hab_L_dir   <= '1';
+                                                hab_L_cmd   <= '0'; --podria poner un if y no hacer el otro case?    
+                                                if unsigned (cuenta) = 7 then 
+                                                estado_sig <= check_dir;
+                                                cuenta_d <= (others => '0');   
+                                                end if;               
   
-                    when inicio =>      estado_sig <=load_dir;
-                        cuenta_D <= (others => '0');
-                        valid_D <=valid;
-                        hab_out <= '0';
-                        hab_L_dir <= '0';
-                        hab_L_cmd <= '0';
-                    when rep =>         estado_sig <=reset_state;
-                        cuenta_D <= (others => '0');
-                        valid_D <=valid;
-                        hab_out <= '0';
-                        hab_L_dir <= '0';
-                        hab_L_cmd <= '0';
-                    when others =>      estado_sig <=load_dir;
-                        cuenta_D <= cuenta;
-                        valid_D <=valid;
-                        hab_out <= '0';
-                        hab_L_dir <= '0';
-                        hab_L_cmd <= '0';                       
+                        when inicio =>      estado_sig <=load_dir;
+                                            cuenta_D <= (others => '0');
+                                            valid_D <=valid;
+                                            hab_out <= '0';
+                                            hab_L_dir <= '0';
+                                            hab_L_cmd <= '0';
+
+                        when rep =>         estado_sig <=reset_state;
+                                            cuenta_D <= (others => '0');
+                                            valid_D <=valid;
+                                            hab_out <= '0';
+                                            hab_L_dir <= '0';
+                                            hab_L_cmd <= '0';
+
+                        when others =>      estado_sig <=load_dir;
+                                            cuenta_D <= cuenta;
+                                            valid_D <=valid;
+                                            hab_out <= '0';
+                                            hab_L_dir <= '0';
+                                            hab_L_cmd <= '0';  
+
                 end case;
 
 
             when check_dir => 
                 case (code) is 
                     when bit_0 =>       estado_sig <=check_dir;
-                    cuenta_D <= std_logic_vector ( unsigned (cuenta) + 1);
-                    valid_D <= valid;
-                    hab_out     <= '0';
-                    hab_L_dir   <= '0';
-                    hab_L_cmd   <= '0'; 
-                    if unsigned (cuenta)= 7 then 
-                    estado_sig <= load_cmd;
-                    cuenta_D <= (others => '0');
-                    end if;
-                    if bit_dir_selected  = '0' then
-                        estado_sig <= reset_state;
-                    end if;
+                                        cuenta_D <= std_logic_vector ( unsigned (cuenta) + 1);
+                                        valid_D <= valid;
+                                        hab_out     <= '0';
+                                        hab_L_dir   <= '0';
+                                        hab_L_cmd   <= '0'; 
+                                        if unsigned (cuenta)= 7 then 
+                                        estado_sig <= load_cmd;
+                                        cuenta_D <= (others => '0');
+                                        end if;
+                                        if bit_dir_selected  = '0' then
+                                            estado_sig <= reset_state;
+                                        end if;
 
                     when bit_1 =>       estado_sig <=check_dir;
-                    cuenta_D <= std_logic_vector ( unsigned (cuenta) + 1);
-                    valid_D <= valid;
-                    hab_out     <= '0';
-                    hab_L_dir   <= '0';
-                    hab_L_cmd   <= '0'; 
-                    if unsigned (cuenta)= 7 then 
-                    estado_sig <= load_cmd;
-                    cuenta_D <= (others => '0');
-                    end if;
-                    if bit_dir_selected = '1' then
-                        estado_sig <= reset_state;
-                    end if;
+                                        cuenta_D <= std_logic_vector ( unsigned (cuenta) + 1);
+                                        valid_D <= valid;
+                                        hab_out     <= '0';
+                                        hab_L_dir   <= '0';
+                                        hab_L_cmd   <= '0'; 
+                                        if unsigned (cuenta)= 7 then 
+                                        estado_sig <= load_cmd;
+                                        cuenta_D <= (others => '0');
+                                        end if;
+                                        if bit_dir_selected = '1' then
+                                            estado_sig <= reset_state;
+                                        end if;
+
                     when inicio =>      estado_sig <=load_dir;
-                    cuenta_D <= (others => '0');
-                    valid_D <=  (others => '0');
-                    hab_out <= '0';
-                    hab_L_dir <= '0';
-                    hab_L_cmd <= '0';
+                                        cuenta_D <= (others => '0');
+                                        valid_D <=  (others => '0');
+                                        hab_out <= '0';
+                                        hab_L_dir <= '0';
+                                        hab_L_cmd <= '0';
+
                     when rep =>         estado_sig <=reset_state;
-                    cuenta_D <= (others => '0');
-                    valid_D <=  (others => '0');
-                    hab_out <= '0';
-                    hab_L_dir <= '0';
-                    hab_L_cmd <= '0';
+                                        cuenta_D <= (others => '0');
+                                        valid_D <=  (others => '0');
+                                        hab_out <= '0';
+                                        hab_L_dir <= '0';
+                                        hab_L_cmd <= '0';
+
                     when others =>      estado_sig <=check_dir;
-                    cuenta_D <= cuenta;
-                    valid_D <=  valid;
-                    hab_out <= '0';
-                    hab_L_dir <= '0';
-                    hab_L_cmd <= '0';          
+                                        cuenta_D <= cuenta;
+                                        valid_D <=  valid;
+                                        hab_out <= '0';
+                                        hab_L_dir <= '0';
+                                        hab_L_cmd <= '0';  
+
                 end case;
 
             when load_cmd => 
-            case (code) is 
-            when (bit_0) =>      estado_sig <=load_cmd;
-            cuenta_D <= std_logic_vector ( unsigned (cuenta) + 1);
-            valid_D <= valid;
-            hab_out     <= '0';
-            hab_L_dir   <= '0';
-            hab_L_cmd   <= '1'; --podria poner un if y no hacer el otro case? 
-            if unsigned (cuenta) = 7 then 
-            estado_sig <= check_cmd;
-            cuenta_D <= (others => '0');
-            end if;
-            when (bit_1)   =>       estado_sig <=load_cmd;
-            cuenta_D <= std_logic_vector ( unsigned (cuenta) + 1);
-            valid_D <= valid;
-            hab_out     <= '0';
-            hab_L_dir   <= '0';
-            hab_L_cmd   <= '1'; --podria poner un if y no hacer el otro case? 
-            if unsigned (cuenta) = 7 then 
-            estado_sig <= check_cmd;
-            cuenta_D <= (others => '0');
-            end if;
+                case (code) is 
+                    when (bit_0) =>     estado_sig <=load_cmd;
+                                        cuenta_D <= std_logic_vector ( unsigned (cuenta) + 1);
+                                        valid_D <= valid;
+                                        hab_out     <= '0';
+                                        hab_L_dir   <= '0';
+                                        hab_L_cmd   <= '1'; --podria poner un if y no hacer el otro case? 
+                                        if unsigned (cuenta) = 7 then 
+                                        estado_sig <= check_cmd;
+                                        cuenta_D <= (others => '0');
+                                        end if;
+
+                    when (bit_1)   =>   estado_sig <=load_cmd;
+                                        cuenta_D <= std_logic_vector ( unsigned (cuenta) + 1);
+                                        valid_D <= valid;
+                                        hab_out     <= '0';
+                                        hab_L_dir   <= '0';
+                                        hab_L_cmd   <= '1'; --podria poner un if y no hacer el otro case? 
+                                        if unsigned (cuenta) = 7 then 
+                                        estado_sig <= check_cmd;
+                                        cuenta_D <= (others => '0');
+                                        end if;
 
                     when inicio =>      estado_sig <=load_dir;
-                    cuenta_D <= (others => '0');
-                    valid_D <=valid;
-                    hab_out <= '0';
-                    hab_L_dir <= '0';
-                    hab_L_cmd <= '0';
+                                        cuenta_D <= (others => '0');
+                                        valid_D <=valid;
+                                        hab_out <= '0';
+                                        hab_L_dir <= '0';
+                                        hab_L_cmd <= '0';
+
                     when rep =>         estado_sig <=reset_state;
-                    cuenta_D <= (others => '0');
-                    valid_D <=valid;
-                    hab_out <= '0';
-                    hab_L_dir <= '0';
-                    hab_L_cmd <= '0';
+                                        cuenta_D <= (others => '0');
+                                        valid_D <=valid;
+                                        hab_out <= '0';
+                                        hab_L_dir <= '0';
+                                        hab_L_cmd <= '0';
+
                     when others =>      estado_sig <=load_cmd;
-                    cuenta_D <= cuenta;
-                    valid_D <=valid;
-                    hab_out <= '0';
-                    hab_L_dir <= '0';
-                    hab_L_cmd <= '0';
+                                        cuenta_D <= cuenta;
+                                        valid_D <=valid;
+                                        hab_out <= '0';
+                                        hab_L_dir <= '0';
+                                        hab_L_cmd <= '0';
+
                 end case;
 
             when check_cmd => 
                 case (code) is 
                     when bit_0 =>       estado_sig <=check_cmd;
-                    cuenta_D <= std_logic_vector ( unsigned (cuenta) + 1);
-                    valid_D <= valid;
-                    hab_out     <= '0';
-                    hab_L_dir   <= '0';
-                    hab_L_cmd   <= '0'; 
-                    if unsigned (cuenta) = 7  then 
-                    estado_sig <= reset_state;
-                    valid_D <= (others => '1');           
-                    hab_out<='1';
-                    cuenta_D <= (others => '0');                   
-                end if;
-                    if bit_cmd_selected  = '0' then
-                        estado_sig <= reset_state;
-                    end if;
+                                        cuenta_D <= std_logic_vector ( unsigned (cuenta) + 1);
+                                        valid_D <= valid;
+                                        hab_out     <= '0';
+                                        hab_L_dir   <= '0';
+                                        hab_L_cmd   <= '0'; 
+                                        if unsigned (cuenta) = 7  then 
+                                            estado_sig <= reset_state;
+                                            valid_D <= (others => '1');           
+                                            hab_out<='1';
+                                            cuenta_D <= (others => '0');                   
+                                        end if;
+                                        if bit_cmd_selected  = '0' then
+                                            estado_sig <= reset_state;
+                                        end if;
+
                     when bit_1 =>       estado_sig <=check_cmd;
-                    cuenta_D <= std_logic_vector ( unsigned (cuenta) + 1);
-                    valid_D <= valid;
-                    hab_out     <= '0';
-                    hab_L_dir   <= '0';
-                    hab_L_cmd   <= '0'; 
-                    if unsigned (cuenta) = 7  then 
-                    estado_sig <= reset_state;
-                    valid_D <= (others => '1');           
-                    hab_out<='1';
-                    cuenta_D <= (others => '0');                    
-                end if;
-                    if bit_cmd_selected = '1' then
-                        estado_sig <= reset_state;
-                    end if;
+                                        cuenta_D <= std_logic_vector ( unsigned (cuenta) + 1);
+                                        valid_D <= valid;
+                                        hab_out     <= '0';
+                                        hab_L_dir   <= '0';
+                                        hab_L_cmd   <= '0'; 
+                                        if unsigned (cuenta) = 7  then 
+                                            estado_sig <= reset_state;
+                                            valid_D <= (others => '1');           
+                                            hab_out<='1';
+                                            cuenta_D <= (others => '0');                    
+                                        end if;
+                                        if bit_cmd_selected = '1' then
+                                            estado_sig <= reset_state;
+                                        end if;
+
                     when inicio =>      estado_sig <=load_dir;
-                    cuenta_D <= cuenta;
-                    valid_D <=valid;
-                    hab_out <= '0';
-                    hab_L_dir <= '0';
-                    hab_L_cmd <= '0';
+                                        cuenta_D <= cuenta;
+                                        valid_D <=valid;
+                                        hab_out <= '0';
+                                        hab_L_dir <= '0';
+                                        hab_L_cmd <= '0';
+
                     when rep =>         estado_sig <=reset_state;
-                    cuenta_D <= cuenta;
-                    valid_D <=valid;
-                    hab_out <= '0';
-                    hab_L_dir <= '0';
-                    hab_L_cmd <= '0';
+                                        cuenta_D <= cuenta;
+                                        valid_D <=valid;
+                                        hab_out <= '0';
+                                        hab_L_dir <= '0';
+                                        hab_L_cmd <= '0';
+
                     when others =>      estado_sig <=check_cmd;
-                    cuenta_D <= cuenta;
-                    valid_D <=valid;
-                    hab_out <= '0';
-                    hab_L_dir <= '0';
-                    hab_L_cmd <= '0';
+                                        cuenta_D <= cuenta;
+                                        valid_D <=valid;
+                                        hab_out <= '0';
+                                        hab_L_dir <= '0';
+                                        hab_L_cmd <= '0';
+
                 end case;
 
-            when others => estado_sig <= reset_state;
-            cuenta_D <= cuenta;
-            valid_D <=valid;
-            hab_out <= '0';
-            hab_L_dir <= '0';
-            hab_L_cmd <= '0';
+            when others =>      estado_sig <= reset_state;
+                                cuenta_D <= cuenta;
+                                valid_D <=valid;
+                                hab_out <= '0';
+                                hab_L_dir <= '0';
+                                hab_L_cmd <= '0';
+
         end case;
     end process;
 
@@ -408,7 +442,7 @@ contador_clk_logica : process (clk)
     end process;
 
 
-    codigo_logica : process (all)
+codigo_logica : process (all)
     begin
         code <= none;
         rst_clk <= '0';
@@ -419,28 +453,26 @@ contador_clk_logica : process (clk)
             flag <= '0';
             if tipo (1) = '1' then
                 case (clk_c) is
-
-                    when  1 to 5     => prev_d <= "10"; flag3 <= '1';
-                    when  30 to 50     => prev_d <= "01"; flag2<= '1';
-                    when others => code <= none;
-                    flag <= '1';
+                    when  1 to 5        =>  prev_d <= "10"; flag3 <= '1';
+                    when  30 to 50      =>  prev_d <= "01"; flag2<= '1';
+                    when others         =>  code <= none;
+                                            flag <= '1';
                 end case;
             end if;            
             if prev = "10" and tipo (1)= '0' then
                 prev_d <= "00";
                 case (clk_c) is
-                    when  1 to 5   => code <= bit_0;
-                    when  6 to 20   => code <= bit_1;
-                    when others => code <= none;
+                    when  1 to 5    =>  code <= bit_0;
+                    when  6 to 20   =>  code <= bit_1;
+                    when others     =>  code <= none;
                 end case;
             end if;
             if prev = "01" and tipo (1) = '0' then
-            case (clk_c)is 
-            when 15 to 25 =>
-                prev_d <= "00";
-                code <= inicio;
-            when others => code<= none;
-            end case;
+                case (clk_c)is 
+                    when 15 to 25   =>  prev_d  <=  "00";
+                                        code    <=  inicio;
+                    when others     =>  code    <=  none;
+                end case;
             end if;
         end if;        
     end process;           

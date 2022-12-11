@@ -52,17 +52,20 @@ begin
         hab_in <= '1';
         rst_in <= '1';
         wait for 5 ms;
+
         if (valido_out /='0' or dir_out /= x"00" or cmd_out /= x"00") then
             report  "Estado luego de reset distinto al esperado"
             severity error;
             pass:= false;
         end if;
+
         rst_in <= '0';
         wait for 5 ms;
         infrarrojo_in <= '0';
         wait for 9000 us ;
         infrarrojo_in <= '1';
         wait for 4500 us;
+
         tx_dir : for k in 0 to 7 loop
             infrarrojo_in <= '0';
             wait for pulso;
@@ -71,7 +74,8 @@ begin
             if byte_dir(k) = '1' then 
                 wait for  2*pulso;
             end if;
-        end loop;       
+        end loop;
+
         tx_ndir : for k in 0 to 7 loop
             infrarrojo_in <= '0';
             wait for pulso;
@@ -80,7 +84,8 @@ begin
             if byte_dir(k) = '0' then 
                 wait for  2*pulso;
             end if;  
-        end loop;    
+        end loop; 
+
         tx_cmd : for k in 0 to 7 loop
             infrarrojo_in <= '0';
             wait for pulso;
@@ -89,7 +94,8 @@ begin
             if byte_cmd(k) = '1' then 
                 wait for  2*pulso;
             end if;
-        end loop;       
+        end loop; 
+
         tx_ncmd : for k in 0 to 7 loop
             infrarrojo_in <= '0';
             wait for pulso;
@@ -99,6 +105,7 @@ begin
                 wait for  2*pulso;
             end if;  
         end loop;
+        
         infrarrojo_in <= '0';
         wait for pulso;
         infrarrojo_in <= '1';
