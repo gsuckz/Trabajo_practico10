@@ -121,7 +121,7 @@ tipo_clk : ffd
         D => tipo_d
     );
     
-    prev_ff : ffd
+prev_ff : ffd
     generic map (N => 2)
     port map( 
         rst => rst,
@@ -197,9 +197,9 @@ process (all)
                                                 hab_out     <= '0';
                                                 hab_L_dir   <= '1';
                                                 hab_L_cmd   <= '0'; --podria poner un if y no hacer el otro case? 
-                                                if unsigned (cuenta) = 7 then 
-                                                estado_sig <= check_dir;
-                                                cuenta_d <= (others => '0');
+                                                if unsigned (cuenta) = 7 then       --No esta generando una memoria?(por falta de else)
+                                                    estado_sig <= check_dir;
+                                                    cuenta_d <= (others => '0');
                                                 end if;
 
                         when (bit_1)  =>        estado_sig <=load_dir;
@@ -208,9 +208,9 @@ process (all)
                                                 hab_out     <= '0';
                                                 hab_L_dir   <= '1';
                                                 hab_L_cmd   <= '0'; --podria poner un if y no hacer el otro case?    
-                                                if unsigned (cuenta) = 7 then 
-                                                estado_sig <= check_dir;
-                                                cuenta_d <= (others => '0');   
+                                                if unsigned (cuenta) = 7 then       --No esta generando una memoria?(por falta de else)
+                                                    estado_sig <= check_dir;
+                                                    cuenta_d <= (others => '0');   
                                                 end if;               
   
                         when inicio =>      estado_sig <=load_dir;
@@ -245,11 +245,11 @@ process (all)
                                         hab_out     <= '0';
                                         hab_L_dir   <= '0';
                                         hab_L_cmd   <= '0'; 
-                                        if unsigned (cuenta)= 7 then 
-                                        estado_sig <= load_cmd;
-                                        cuenta_D <= (others => '0');
+                                        if unsigned (cuenta)= 7 then    --No esta generando una memoria?(por falta de else)
+                                            estado_sig <= load_cmd;
+                                            cuenta_D <= (others => '0');
                                         end if;
-                                        if bit_dir_selected  = '0' then
+                                        if bit_dir_selected  = '0' then     --No esta generando una memoria?(por falta de else)
                                             estado_sig <= reset_state;
                                         end if;
 
@@ -259,11 +259,11 @@ process (all)
                                         hab_out     <= '0';
                                         hab_L_dir   <= '0';
                                         hab_L_cmd   <= '0'; 
-                                        if unsigned (cuenta)= 7 then 
-                                        estado_sig <= load_cmd;
-                                        cuenta_D <= (others => '0');
+                                        if unsigned (cuenta)= 7 then        --No esta generando una memoria?(por falta de else)
+                                            estado_sig <= load_cmd;
+                                            cuenta_D <= (others => '0');
                                         end if;
-                                        if bit_dir_selected = '1' then
+                                        if bit_dir_selected = '1' then      --No esta generando una memoria?(por falta de else)
                                             estado_sig <= reset_state;
                                         end if;
 
@@ -298,9 +298,9 @@ process (all)
                                         hab_out     <= '0';
                                         hab_L_dir   <= '0';
                                         hab_L_cmd   <= '1'; --podria poner un if y no hacer el otro case? 
-                                        if unsigned (cuenta) = 7 then 
-                                        estado_sig <= check_cmd;
-                                        cuenta_D <= (others => '0');
+                                        if unsigned (cuenta) = 7 then       --No esta generando una memoria?(por falta de else)
+                                            estado_sig <= check_cmd;
+                                            cuenta_D <= (others => '0');
                                         end if;
 
                     when (bit_1)   =>   estado_sig <=load_cmd;
@@ -309,9 +309,9 @@ process (all)
                                         hab_out     <= '0';
                                         hab_L_dir   <= '0';
                                         hab_L_cmd   <= '1'; --podria poner un if y no hacer el otro case? 
-                                        if unsigned (cuenta) = 7 then 
-                                        estado_sig <= check_cmd;
-                                        cuenta_D <= (others => '0');
+                                        if unsigned (cuenta) = 7 then       --No esta generando una memoria?(por falta de else)
+                                            estado_sig <= check_cmd;
+                                            cuenta_D <= (others => '0');
                                         end if;
 
                     when inicio =>      estado_sig <=load_dir;
@@ -345,13 +345,13 @@ process (all)
                                         hab_out     <= '0';
                                         hab_L_dir   <= '0';
                                         hab_L_cmd   <= '0'; 
-                                        if unsigned (cuenta) = 7  then 
+                                        if unsigned (cuenta) = 7  then      --No esta generando una memoria?(por falta de else)
                                             estado_sig <= reset_state;
                                             valid_D <= (others => '1');           
                                             hab_out<='1';
                                             cuenta_D <= (others => '0');                   
                                         end if;
-                                        if bit_cmd_selected  = '0' then
+                                        if bit_cmd_selected  = '0' then     --No esta generando una memoria?(por falta de else)
                                             estado_sig <= reset_state;
                                         end if;
 
@@ -361,13 +361,13 @@ process (all)
                                         hab_out     <= '0';
                                         hab_L_dir   <= '0';
                                         hab_L_cmd   <= '0'; 
-                                        if unsigned (cuenta) = 7  then 
+                                        if unsigned (cuenta) = 7  then      --No esta generando una memoria?(por falta de else)
                                             estado_sig <= reset_state;
                                             valid_D <= (others => '1');           
                                             hab_out<='1';
                                             cuenta_D <= (others => '0');                    
                                         end if;
-                                        if bit_cmd_selected = '1' then
+                                        if bit_cmd_selected = '1' then      --No esta generando una memoria?(por falta de else)
                                             estado_sig <= reset_state;
                                         end if;
 
@@ -406,15 +406,15 @@ process (all)
 
 contador_clk_logica : process (clk)
     begin 
-    if rst = '1' then
+    if rst = '1' then                       --No esta generando una memoria?(por falta de else)
         clk_c <= 0;
     end if;
     if rising_edge (clk) then               --cuidado con usar detector de flaco (La FPGA no lo puede detectar)
         clk_c <= clk_c +1;
-        if clk_c = 70 then
+        if clk_c = 70 then                  --No esta generando una memoria?(por falta de else)
             clk_c <= clk_c;
         end if;
-        if rst_clk then
+        if rst_clk then                     --No esta generando una memoria?(por falta de else)
             clk_c <= 0;
         end if;
     end if;
@@ -426,11 +426,11 @@ codigo_logica : process (all)
         code <= none;
         rst_clk <= '0';
         prev_d <= prev;
-        if tipo (0) /= tipo (1) then
+        if tipo (0) /= tipo (1) then            --No esta generando una memoria?(por falta de else)
             prev_d <= "00";
             rst_clk <= '1';
             flag <= '0';
-            if tipo (1) = '1' then
+            if tipo (1) = '1' then              --No esta generando una memoria?(por falta de else)
                 case (clk_c) is
                     when  1 to 5        =>  prev_d <= "10"; flag3 <= '1';
                     when  30 to 50      =>  prev_d <= "01"; flag2<= '1';
@@ -438,7 +438,7 @@ codigo_logica : process (all)
                                             flag <= '1';
                 end case;
             end if;            
-            if prev = "10" and tipo (1)= '0' then
+            if prev = "10" and tipo (1)= '0' then               --No esta generando una memoria?(por falta de else)
                 prev_d <= "00";
                 case (clk_c) is
                     when  1 to 5    =>  code <= bit_0;
@@ -446,7 +446,7 @@ codigo_logica : process (all)
                     when others     =>  code <= none;
                 end case;
             end if;
-            if prev = "01" and tipo (1) = '0' then
+            if prev = "01" and tipo (1) = '0' then              --No esta generando una memoria?(por falta de else)
                 case (clk_c)is 
                     when 15 to 25   =>  prev_d  <=  "00";
                                         code    <=  inicio;
