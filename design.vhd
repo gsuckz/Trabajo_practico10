@@ -146,7 +146,7 @@ process (all)
     begin  
     dir_d(7) <= '0';
     cmd_d(7) <= '0';          
-        if code = bit_1  then
+        if code = bit_1  then               --No esta generando una memoria?(por falta de else)
             dir_d(7) <= '1';
             cmd_d(7) <= '1';
         end if;
