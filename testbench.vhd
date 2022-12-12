@@ -51,16 +51,28 @@ begin
     begin
         hab_in <= '1';
         rst_in <= '1';
+        infrarrojo_in <= '1';
         wait for 5 ms;
 
         if (valido_out /='0' or dir_out /= x"00" or cmd_out /= x"00") then
-            report  "Estado luego de reset distinto al esperado"
+            report  "Estado durante reset distinto al esperado"
             severity error;
             pass:= false;
         end if;
 
         rst_in <= '0';
+        if (valido_out /='0' or dir_out /= x"00" or cmd_out /= x"00") then
+            report  "Estado inmediato al  reset distinto al esperado"
+            severity error;
+            pass:= false;
+        end if;       
+
         wait for 5 ms;
+        if (valido_out /='0' or dir_out /= x"00" or cmd_out /= x"00") then
+            report  "Estado 5ms luego de reset distinto al esperado"
+            severity error;
+            pass:= false;
+        end if;
         infrarrojo_in <= '0';
         wait for 9000 us ;
         infrarrojo_in <= '1';
