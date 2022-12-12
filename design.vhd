@@ -176,7 +176,7 @@ process (all)
 process (all) 
     begin
         case (estado) is
-            when rep_state => estado_sig <= reset_state
+            when rep_state => estado_sig <= reset_state;
                 cuenta_D <= (others => '0');
                 valid_D <= "1";
                 hab_out <= '0';
