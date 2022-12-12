@@ -109,7 +109,7 @@ begin
         infrarrojo_in <= '0';
         wait for pulso;
         infrarrojo_in <= '1';
-        wait for 10*pulso;        
+        wait for 1000 us;        
         infrarrojo_in <= '0';
         wait for 9000 us;
         infrarrojo_in <= '1';
