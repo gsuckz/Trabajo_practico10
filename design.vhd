@@ -42,7 +42,7 @@ signal clk_c, clk_c_d                           : std_logic_vector (7 downto 0);
 signal tipo, tipo_d, prev                       : std_logic_vector (1 downto 0);
 signal flag,flag2,flag3                         : std_logic;
 signal prev_D                                   : std_logic_vector (1 downto 0);
-signal valid_count, valid_count_D               : std_logic_vector (6 downto 0);
+signal valid_count, valid_count_D               : std_logic_vector (7 downto 0);
 
 signal estado,estado_sig                        : tipos_estado;
 signal code                                     : codigo;
@@ -140,7 +140,7 @@ prev_ff : ffd
     );
 
 valid_counter_ff : ffd 
-    generic map (N => 7)
+    generic map (N => valid_count'length)
     port map( 
         rst => rst,
         hab => hab,
@@ -153,7 +153,7 @@ valid_counter_ff : ffd
 process (all)
     begin   
         valid_count_d <= std_logic_vector( unsigned (valid_count) + 1);
-        if unsigned (valid_count) = 100 then 
+        if unsigned (valid_count) + 1 = 0 then 
             valid_count_d <= valid_count;
         end if;
         if valid = "0" then 
@@ -165,7 +165,7 @@ process (clk, rst)
     begin
         if rst = '1' then
             estado <= reset_state;
-        elsif rising_edge(clk) then            
+        elsif rising_edge(clk) and hab = '1' then            
             estado <= estado_sig;
         end if;
     end process;
@@ -180,7 +180,7 @@ process (all)
         end if;
     end process;
 
-valido <= '1' when valid(0)='1' and (unsigned (valid_count) > 70 or code /= rep) else '0';
+valido <= '1' when valid(0)='1' and not (unsigned (valid_count) <= (70 + 3*20) and code = rep) else '0';
 
 
                   

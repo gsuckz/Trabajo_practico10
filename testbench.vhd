@@ -1,5 +1,6 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
 use std.env.finish;
 
 entity receptor_control_remoto_tb is
@@ -25,8 +26,24 @@ architecture tb of receptor_control_remoto_tb is
     --Señales
     signal rst_in, infrarrojo_in, hab_in, clk_in, valido_out : std_logic;
     signal dir_out, cmd_out : std_logic_vector (7 downto 0);
-
+    signal rst_cnt_nvalido : std_logic;
+    signal cnt_cnt_nvalido : std_logic_vector (1 downto 0);
 begin 
+
+    contador_cnt_nvalido : process (clk_in,rst_cnt_nvalido)
+        variable sig_cnt : unsigned (cnt_cnt_nvalido'range);
+    begin
+        if rst_cnt_nvalido then
+            cnt_cnt_nvalido <= "00";
+        elsif (rising_edge(clk_in) and hab_in = '1' and valido_out = '0') then
+            sig_cnt := unsigned(cnt_cnt_nvalido) + 1;
+            if sig_cnt /= 0 then
+                cnt_cnt_nvalido <= std_logic_vector(sig_cnt);
+            else
+                cnt_cnt_nvalido <= cnt_cnt_nvalido;
+            end if;
+        end if;
+    end process;
 
     DUT : receptor_control_remoto port map (
         rst         =>    rst_in, 
@@ -40,18 +57,26 @@ begin
     
     clk_signal: process
     begin
+        hab_in <= '1';        
         clk_in <= '0';
-        wait for T_clk;
+        wait for T_clk/10;
         clk_in <= '1';
-        wait for T_clk;
+        wait for T_clk/10;
+        hab_in <= '0';
+        for i in 1 to 9 loop
+            clk_in <= '0';
+            wait for T_clk/10;
+            clk_in <= '1';
+            wait for T_clk/10;
+        end loop;
     end process;
 
     data_signal : process
         variable pass : boolean := true;
     begin
-        hab_in <= '1';
         rst_in <= '1';
         infrarrojo_in <= '1';
+        rst_cnt_nvalido <= '1';
         wait for 5 ms;
 
         if (valido_out /='0' or dir_out /= x"00" or cmd_out /= x"00") then
@@ -61,12 +86,6 @@ begin
         end if;
 
         rst_in <= '0';
-        if (valido_out /='0' or dir_out /= x"00" or cmd_out /= x"00") then
-            report  "Estado inmediato al  reset distinto al esperado"
-            severity error;
-            pass:= false;
-        end if;       
-
         wait for 5 ms;
         if (valido_out /='0' or dir_out /= x"00" or cmd_out /= x"00") then
             report  "Estado 5ms luego de reset distinto al esperado"
@@ -121,7 +140,20 @@ begin
         infrarrojo_in <= '0';
         wait for pulso;
         infrarrojo_in <= '1';
-        wait for 1000 us;        
+        rst_cnt_nvalido <= '0';
+        for i in 1 to 59 loop
+            wait on clk_in until clk_in = '1' and hab_in = '1';
+        end loop;
+        --wait 1000 us;        
+        if (valido_out /= '1' or dir_out /= byte_dir or cmd_out /= byte_cmd) then
+            report "Salida distinta a la esperada"
+                   & lf & "    Esperaba valido '1', dir " & to_string(byte_dir) & ", cmd " & to_string(byte_cmd)
+                   & lf & "    Obtenido valido " & std_logic'image(valido_out)
+                   & ", dir " & to_string(dir_out) & ", cmd " & to_string(cmd_out)
+            severity error;
+            pass:=false;
+        end if;
+
         infrarrojo_in <= '0';
         wait for 9000 us;
         infrarrojo_in <= '1';
@@ -129,6 +161,12 @@ begin
         infrarrojo_in <= '0';
         wait for pulso;
         infrarrojo_in <= '1';
+        wait on clk_in;
+        if (unsigned(cnt_cnt_nvalido) /= 1 ) then
+            report "Esperaba 1 ciclo con valido en '0', contados "&to_string(cnt_cnt_nvalido) &" ciclos."
+                severity error;
+            pass := false;
+        end if;
         if (valido_out /= '1' or dir_out /= byte_dir or cmd_out /= byte_cmd) then
             report "Salida distinta a la esperada"
                    & lf & "    Esperaba valido '1', dir " & to_string(byte_dir) & ", cmd " & to_string(byte_cmd)
